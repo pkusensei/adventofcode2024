@@ -1,0 +1,9 @@
+[workspace]
+
+members = [ "d01",
+    "utils",
+]
+resolver = "2"
+
+[workspace.dependencies]
+itertools = "^0.13"
