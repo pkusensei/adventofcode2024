@@ -1,6 +1,6 @@
 [workspace]
 
-members = [ "d01",
+members = [ "d01", "d02",
     "utils",
 ]
 resolver = "2"

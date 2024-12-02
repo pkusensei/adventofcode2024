@@ -7,5 +7,9 @@ name = "d01"
 version = "0.1.0"
 
 [[package]]
+name = "d02"
+version = "0.1.0"
+
+[[package]]
 name = "utils"
 version = "0.1.0"
