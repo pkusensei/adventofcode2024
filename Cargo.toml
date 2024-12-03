@@ -1,9 +1,10 @@
 [workspace]
 
-members = [ "d01", "d02",
+members = [ "d01", "d02", "d03",
     "utils",
 ]
 resolver = "2"
 
 [workspace.dependencies]
 itertools = "^0.13"
+regex = "^1"
