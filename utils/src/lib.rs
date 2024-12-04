@@ -1,5 +1,16 @@
 pub type Coord = (usize, usize);
 
+pub const ALL_DIRS: [[i32; 2]; 8] = [
+    [-1, -1],
+    [-1, 0],
+    [-1, 1],
+    [0, 1],
+    [1, 1],
+    [1, 0],
+    [1, -1],
+    [0, -1],
+];
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Dir {
     North,
@@ -35,15 +46,15 @@ pub fn parse_with_lens<'a, V, F>(
 where
     F: Fn(u8) -> V,
 {
-    let y_len = lines.lines().count();
-    let x_len = lines.lines().next().map(|s| s.trim().len()).unwrap();
+    let rows = lines.lines().count();
+    let cols = lines.lines().next().map(|s| s.trim().len()).unwrap();
     let it = lines.lines().enumerate().flat_map(move |(y, line)| {
         line.trim()
             .bytes()
             .enumerate()
-            .map(move |(x, b)| ((x, y), f(b)))
+            .map(move |(x, b)| ((y, x), f(b)))
     });
-    ((x_len, y_len), it)
+    ((rows, cols), it)
 }
 
 pub const fn gcd(a: usize, b: usize) -> usize {
