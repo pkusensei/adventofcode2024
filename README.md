@@ -2,3 +2,6 @@
 
 ### 1202
 - Wasn't expecting to see LIS here. 
+
+### 1205 
+- Instead of sorting, rebuild a new vec.
