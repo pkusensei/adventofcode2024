@@ -28,6 +28,15 @@ impl Dir {
             Dir::East => Dir::West,
         }
     }
+
+    pub const fn turn_right(self) -> Self {
+        match self {
+            Dir::North => Dir::East,
+            Dir::South => Dir::West,
+            Dir::West => Dir::North,
+            Dir::East => Dir::South,
+        }
+    }
 }
 
 pub const fn deltas(x: usize, y: usize) -> [(Coord, Dir); 4] {
