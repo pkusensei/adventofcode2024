@@ -49,8 +49,9 @@ pub fn p2(s: &str) -> usize {
         };
         for i in 0..len {
             nums.swap(left + i, right + i);
+            indices[left + i].1 = indices[right + i].1;
+            indices[right + i].1 = None;
         }
-        indices = nums.clone().into_iter().enumerate().collect();
     }
     nums.into_iter()
         .enumerate()

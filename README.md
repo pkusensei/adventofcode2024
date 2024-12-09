@@ -5,3 +5,6 @@
 
 ### 1205 
 - Instead of sorting, rebuild a new vec.
+
+### 1209
+- Apparently cloning is really expensive. 
