@@ -11,3 +11,6 @@
 
 ### 1211 
 - HashMap::entry() is much safer/less error prone than insert(). 
+
+### 1212
+- Trying to be smart is actually stupid. 
