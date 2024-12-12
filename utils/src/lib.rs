@@ -1,6 +1,8 @@
 pub type Coord = (usize, usize);
 
-pub const ALL_DIRS: [[i32; 2]; 8] = [
+pub const DELTAS4: [[i32; 2]; 4] = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+pub const DELTAS8: [[i32; 2]; 8] = [
     [-1, -1],
     [-1, 0],
     [-1, 1],

@@ -8,7 +8,7 @@ pub fn p1(s: &str) -> u64 {
     let mut res = 0;
     for ((y, x), b) in it {
         if b == b'X' {
-            for dir in ALL_DIRS {
+            for dir in DELTAS8 {
                 res += dfs(&grid, y as _, x as _, dir[0], dir[1], b'X');
             }
         }
