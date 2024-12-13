@@ -3,67 +3,49 @@ use std::{collections::VecDeque, convert::identity};
 use fxhash::{FxHashMap, FxHashSet};
 use utils::{parse_with_lens, DELTAS4};
 
-pub fn p1(s: &str) -> usize {
+pub fn solve(s: &str) -> (usize, usize) {
     let (rows, cols, grid) = build(s);
     let mut seen = FxHashSet::default();
-    let mut res = 0;
+    let (mut p1, mut p2) = (0, 0);
     for row in 0..rows {
         for col in 0..cols {
             if seen.insert([row as i32, col as i32]) {
                 let (inside, outside) = bfs(&grid, row as i32, col as i32);
-                res += inside.len() * outside.len();
+                p1 += inside.len() * outside.len();
+                p2 += inside.len() * count_sides(outside);
                 seen.extend(inside);
             }
         }
     }
-    res
-}
-
-pub fn p2(s: &str) -> usize {
-    let (rows, cols, grid) = build(s);
-    let mut seen = FxHashSet::default();
-    let mut res = 0;
-    for row in 0..rows {
-        for col in 0..cols {
-            if seen.insert([row as i32, col as i32]) {
-                let (inside, outside) = bfs(&grid, row as i32, col as i32);
-                res += inside.len() * count_sides(outside);
-                seen.extend(inside);
-            }
-        }
-    }
-    res
+    (p1, p2)
 }
 
 fn count_sides(set: FxHashSet<[i32; 4]>) -> usize {
     let mut res = 0;
     let mut seen = FxHashSet::default();
-    while seen.len() < set.len() {
-        for &p in set.iter() {
-            if seen.contains(&p) {
-                continue;
-            }
-            let mut queue = VecDeque::from([p]);
-            seen.insert(p);
-            while let Some([row, col, dr, dc]) = queue.pop_front() {
-                for d in [-1, 1] {
-                    if dr == 0 {
-                        // dc==1 this is a up-down fence
-                        let nr = row + d;
-                        if set.contains(&[nr, col, dr, dc]) && seen.insert([nr, col, dr, dc]) {
-                            queue.push_back([nr, col, dr, dc]);
-                        }
-                    } else {
-                        // dr==1 left-right fence
-                        let nc = col + d;
-                        if set.contains(&[row, nc, dr, dc]) && seen.insert([row, nc, dr, dc]) {
-                            queue.push_back([row, nc, dr, dc]);
-                        }
+    for &p in set.iter() {
+        if !seen.insert(p) {
+            continue;
+        }
+        let mut queue = VecDeque::from([p]);
+        while let Some([row, col, dr, dc]) = queue.pop_front() {
+            for d in [-1, 1] {
+                if dr == 0 {
+                    // dc==1 up-down fence
+                    let nr = row + d;
+                    if set.contains(&[nr, col, dr, dc]) && seen.insert([nr, col, dr, dc]) {
+                        queue.push_back([nr, col, dr, dc]);
+                    }
+                } else {
+                    // dr==1 left-right fence
+                    let nc = col + d;
+                    if set.contains(&[row, nc, dr, dc]) && seen.insert([row, nc, dr, dc]) {
+                        queue.push_back([row, nc, dr, dc]);
                     }
                 }
             }
-            res += 1;
         }
+        res += 1;
     }
     res
 }
@@ -133,14 +115,14 @@ MMMISSJEEE"#;
 
     #[test]
     fn it_works() {
-        assert_eq!(p1(TEST1), 140);
-        assert_eq!(p1(TEST2), 772);
-        assert_eq!(p1(TEST3), 1930);
-        assert_eq!(p1(INPUT), 1424006);
-
-        assert_eq!(p2(TEST1), 80);
-        assert_eq!(p2(TEST2), 436);
-        assert_eq!(p2(TEST3), 1206);
-        assert_eq!(p2(INPUT), 858684);
+        fn run(s: &str, n1: usize, n2: usize) {
+            let (p1, p2) = solve(s);
+            assert_eq!(p1, n1);
+            assert_eq!(p2, n2);
+        }
+        run(TEST1, 140, 80);
+        run(TEST2, 772, 436);
+        run(TEST3, 1930, 1206);
+        run(INPUT, 1424006, 858684);
     }
 }
