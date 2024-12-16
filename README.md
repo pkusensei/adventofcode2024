@@ -14,3 +14,6 @@
 
 ### 1212
 - Trying to be smart is actually stupid. 
+
+### 1216
+- Dijkstra. The node/state should be (position, direction).
