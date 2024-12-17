@@ -1,33 +1,34 @@
-use std::{mem, str::FromStr};
+use std::str::FromStr;
 
 use itertools::Itertools;
 
 pub fn p1(s: &str) -> String {
     let mut bot = Bot::from_str(s).unwrap();
-    bot.eval(false).to_string().chars().join(",")
+    bot.eval();
+    bot.out.into_iter().join(",")
 }
 
 pub fn p2(s: &str) -> usize {
     let bot = Bot::from_str(s).unwrap();
-    let target = bot.prog.iter().fold(0, |acc, n| acc * 10 + n);
-    let mut cands = vec![0];
-    let mut next = Vec::with_capacity(16);
-    for digit in 0..=target.ilog10() {
-        let seek = target % 10usize.pow(1 + digit);
-        next.clear();
-        for &initial in cands.iter() {
-            let shifted = initial << 3;
-            next.extend((0..8).map(|offset| shifted + offset).filter(|&a| {
-                let mut bot = Bot {
-                    ra: a,
-                    ..bot.clone()
-                };
-                bot.eval(true) == seek
-            }));
+    let n = bot.prog.len();
+    let mut stack = vec![(0, 0)];
+    let mut res = vec![];
+    while let Some((a, idx)) = stack.pop() {
+        if idx == bot.prog.len() {
+            res.push(a);
+            continue;
         }
-        mem::swap(&mut cands, &mut next);
+        for b in 0..8 {
+            let ra = (a << 3) | b;
+            let seek = bot.prog[n - idx - 1];
+            let mut curr = Bot { ra, ..bot.clone() };
+            curr.eval();
+            if curr.out[0] == seek {
+                stack.push((ra, 1 + idx));
+            }
+        }
     }
-    cands.into_iter().min().unwrap()
+    res.into_iter().min().unwrap()
 }
 
 fn parse(s: &str) -> impl Iterator<Item = usize> + '_ {
@@ -41,8 +42,8 @@ struct Bot {
     rb: usize,
     rc: usize,
     ip: usize,
-    out: usize,
     prog: Vec<usize>,
+    out: Vec<usize>,
 }
 
 impl FromStr for Bot {
@@ -72,7 +73,7 @@ impl Bot {
         }
     }
 
-    fn eval(&mut self, p2: bool) -> usize {
+    fn eval(&mut self) {
         while let (Some(&op), Some(&operand)) = (self.prog.get(self.ip), self.prog.get(1 + self.ip))
         {
             match op {
@@ -90,14 +91,12 @@ impl Bot {
                     if self.ra > 0 {
                         self.ip = operand;
                         continue; // skip +=1
-                    } else if p2 {
-                        return self.out;
                     }
                 }
                 // bxc
                 4 => self.rb ^= self.rc,
                 // out
-                5 => self.out = self.out * 10 + self.combo(operand) % 8,
+                5 => self.out.push(self.combo(operand) % 8),
                 // bdv
                 6 => {
                     let den = 2usize.pow(self.combo(operand) as u32);
@@ -112,7 +111,6 @@ impl Bot {
             }
             self.ip += 2;
         }
-        self.out
     }
 }
 
