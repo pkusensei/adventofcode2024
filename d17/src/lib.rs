@@ -1,39 +1,33 @@
-use std::str::FromStr;
+use std::{collections::VecDeque, str::FromStr};
 
 use itertools::Itertools;
 
 pub fn p1(s: &str) -> String {
     let mut bot = Bot::from_str(s).unwrap();
-    bot.eval();
-    bot.out.into_iter().join(",")
+    bot.eval().into_iter().join(",")
 }
 
 pub fn p2(s: &str) -> usize {
     let bot = Bot::from_str(s).unwrap();
-    let n = bot.prog.len();
-    let mut stack = vec![(0, 0)];
-    let mut res = vec![];
-    while let Some((a, idx)) = stack.pop() {
-        if idx == bot.prog.len() {
-            res.push(a);
-            continue;
+    let mut queue = VecDeque::from([(0, bot.prog.as_slice())]);
+    while let Some((a, prog)) = queue.pop_front() {
+        if prog.is_empty() {
+            return a;
         }
-        for b in 0..8 {
-            let ra = (a << 3) | b;
-            let seek = bot.prog[n - idx - 1];
-            let mut curr = Bot { ra, ..bot.clone() };
-            curr.eval();
-            if curr.out[0] == seek {
-                stack.push((ra, 1 + idx));
+        let target = *prog.last().unwrap();
+        for i in 0..8 {
+            let mut curr = Bot {
+                ra: i + 8 * a,
+                ..bot.clone()
+            };
+            let out = curr.eval();
+            if out.first().is_some_and(|&v| v == target) {
+                let next = &prog[..prog.len() - 1];
+                queue.push_back((i + 8 * a, next));
             }
         }
     }
-    res.into_iter().min().unwrap()
-}
-
-fn parse(s: &str) -> impl Iterator<Item = usize> + '_ {
-    s.split(|c: char| !c.is_ascii_digit())
-        .filter_map(|v| v.parse().ok())
+    0
 }
 
 #[derive(Debug, Clone, Default)]
@@ -43,14 +37,15 @@ struct Bot {
     rc: usize,
     ip: usize,
     prog: Vec<usize>,
-    out: Vec<usize>,
 }
 
 impl FromStr for Bot {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut it = parse(s);
+        let mut it = s
+            .split(|c: char| !c.is_ascii_digit())
+            .filter_map(|v| v.parse().ok());
         let bot = Bot {
             ra: it.next().ok_or(())?,
             rb: it.next().ok_or(())?,
@@ -73,15 +68,13 @@ impl Bot {
         }
     }
 
-    fn eval(&mut self) {
-        while let (Some(&op), Some(&operand)) = (self.prog.get(self.ip), self.prog.get(1 + self.ip))
-        {
+    fn eval(&mut self) -> Vec<usize> {
+        let mut out = vec![];
+        while let Some(&op) = self.prog.get(self.ip) {
+            let operand = *self.prog.get(1 + self.ip).unwrap_or(&0);
             match op {
                 // adv
-                0 => {
-                    let den = 2usize.pow(self.combo(operand) as u32);
-                    self.ra /= den;
-                }
+                0 => self.ra >>= self.combo(operand),
                 // bxl
                 1 => self.rb ^= operand,
                 // bst
@@ -90,27 +83,22 @@ impl Bot {
                 3 => {
                     if self.ra > 0 {
                         self.ip = operand;
-                        continue; // skip +=1
+                        continue; // skip +=2
                     }
                 }
                 // bxc
                 4 => self.rb ^= self.rc,
                 // out
-                5 => self.out.push(self.combo(operand) % 8),
+                5 => out.push(self.combo(operand) % 8),
                 // bdv
-                6 => {
-                    let den = 2usize.pow(self.combo(operand) as u32);
-                    self.rb = self.ra / den;
-                }
+                6 => self.rb = self.ra >> self.combo(operand),
                 // cdv
-                7 => {
-                    let den = 2usize.pow(self.combo(operand) as u32);
-                    self.rc = self.ra / den;
-                }
+                7 => self.rc = self.ra >> self.combo(operand),
                 _ => unreachable!(),
             }
             self.ip += 2;
         }
+        out
     }
 }
 
@@ -124,6 +112,12 @@ Register C: 0
 
 Program: 0,1,5,4,3,0"#;
 
+    const TEST2: &str = r#"Register A: 2024
+Register B: 0
+Register C: 0
+
+Program: 0,3,5,4,3,0"#;
+
     const INPUT: &str = include_str!("../input.txt");
 
     #[test]
@@ -131,7 +125,7 @@ Program: 0,1,5,4,3,0"#;
         assert_eq!(p1(TEST), "4,6,3,5,6,3,5,2,1,0");
         assert_eq!(p1(INPUT), "7,0,7,3,4,1,3,0,1");
 
-        assert_eq!(p2(TEST), 117440);
+        assert_eq!(p2(TEST2), 117440);
         assert_eq!(p2(INPUT), 156985331222018);
     }
 }

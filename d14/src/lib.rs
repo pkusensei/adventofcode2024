@@ -1,6 +1,5 @@
-use std::{str, sync::LazyLock};
+use std::{str, sync::LazyLock, u64};
 
-use bmp::Image;
 use regex::Regex;
 
 static RE: LazyLock<Regex> =
@@ -30,21 +29,39 @@ pub fn p1(s: &str, is_test: bool) -> u64 {
     a * b * c * d
 }
 
-pub fn p2(s: &str) -> bool {
+pub fn p2(s: &str) -> i32 {
     let [xmax, ymax] = [101, 103];
     let mut points: Vec<_> = parse(s).collect();
+    let mut safety = u64::MAX;
+    let mut res = 0;
     for i in 0..xmax * ymax {
-        let mut img = Image::new(xmax as _, ymax as _);
+        let [mut a, mut b, mut c, mut d] = [0; 4];
         for p in points.iter_mut() {
             p[0] += p[2];
             p[1] += p[3];
             p[0] = p[0].rem_euclid(xmax);
             p[1] = p[1].rem_euclid(ymax);
-            img.set_pixel(p[0] as _, p[1] as _, bmp::consts::WHITE);
+            let [x, y] = [p[0], p[1]];
+            if (0..xmax / 2).contains(&x) && (0..ymax / 2).contains(&y) {
+                a += 1;
+            }
+            if (1 + xmax / 2..xmax).contains(&x) && (0..ymax / 2).contains(&y) {
+                b += 1;
+            }
+            if (0..xmax / 2).contains(&x) && (1 + ymax / 2..ymax).contains(&y) {
+                c += 1;
+            }
+            if (1 + xmax / 2..xmax).contains(&x) && (1 + ymax / 2..ymax).contains(&y) {
+                d += 1;
+            }
         }
-        img.save(format!("../.img/{:05}.bmp", i)).expect("???");
+        let temp = a * b * c * d;
+        if temp < safety {
+            safety = temp;
+            res = 1 + i;
+        }
     }
-    true
+    res
 }
 
 fn parse(s: &str) -> impl Iterator<Item = [i32; 4]> + '_ {
@@ -80,8 +97,7 @@ p=9,5 v=-3,-3"#;
     }
 
     #[test]
-    #[ignore = "not generating 10k+ bmp's anymore"]
     fn t2() {
-        assert!(p2(INPUT)); // 7603
+        assert_eq!(p2(INPUT), 7603); // 7603
     }
 }
