@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 fxhash = { workspace = true }
+itertools = { workspace = true }
 num-complex = { workspace = true }

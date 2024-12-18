@@ -17,3 +17,6 @@
 
 ### 1216
 - Dijkstra. The node/state should be (position, direction).
+
+### 1218
+- Again, DSU is useful. 
