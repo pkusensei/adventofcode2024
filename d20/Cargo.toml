@@ -1,0 +1,9 @@
+[package]
+name = "d20"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fxhash = { workspace = true }
+num-complex = { workspace = true }
+utils = { path = "../utils" }
