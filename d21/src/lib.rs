@@ -1,4 +1,7 @@
-use std::iter::{once, repeat_n};
+use std::{
+    iter::{once, repeat_n},
+    sync::LazyLock,
+};
 
 use fxhash::FxHashMap;
 
@@ -13,12 +16,14 @@ pub fn p2(s: &str) -> usize {
 const EMPTY: u8 = b'#';
 const NUMPAD: [&[u8; 3]; 4] = [b"789", b"456", b"123", b"#0A"];
 const KEYPAD: [&[u8; 3]; 2] = [b"#^A", b"<v>"];
+static NUMMAP: LazyLock<FxHashMap<u8, [i8; 2]>> = LazyLock::new(|| build_map(&NUMPAD));
+static KEYMAP: LazyLock<FxHashMap<u8, [i8; 2]>> = LazyLock::new(|| build_map(&KEYPAD));
 
 fn solve(s: &str, depth: i8) -> usize {
     let mut res = 0;
     let mut memo = FxHashMap::default();
     for line in s.lines() {
-        let len = dfs(line.as_bytes().to_vec(), depth, &NUMPAD, &mut memo);
+        let len = dfs(line.as_bytes().to_vec(), depth, &NUMPAD, &NUMMAP, &mut memo);
         let val = line[..line.len() - 1].parse().unwrap_or(1);
         res += len * val;
     }
@@ -29,6 +34,7 @@ fn dfs(
     seq: Vec<u8>,
     depth: i8,
     pad: &[&[u8; 3]],
+    map: &FxHashMap<u8, [i8; 2]>,
     memo: &mut FxHashMap<(Vec<u8>, i8), usize>,
 ) -> usize {
     if depth == 0 {
@@ -40,9 +46,9 @@ fn dfs(
     let mut res = 0;
     let mut a = b'A';
     for &b in seq.iter() {
-        res += get_paths(pad, a, b)
+        res += get_paths(pad, map, a, b)
             .into_iter()
-            .map(|p| dfs(p, depth - 1, &KEYPAD, memo))
+            .map(|p| dfs(p, depth - 1, &KEYPAD, &KEYMAP, memo))
             .min()
             .unwrap_or(0);
         a = b;
@@ -51,12 +57,12 @@ fn dfs(
     res
 }
 
-fn get_paths(pad: &[&[u8; 3]], k1: u8, k2: u8) -> Vec<Vec<u8>> {
+fn get_paths(pad: &[&[u8; 3]], map: &FxHashMap<u8, [i8; 2]>, k1: u8, k2: u8) -> Vec<Vec<u8>> {
     if k1 == k2 {
         return vec![vec![b'A']];
     }
-    let [r1, c1] = locate(k1, pad);
-    let [r2, c2] = locate(k2, pad);
+    let [r1, c1] = map[&k1];
+    let [r2, c2] = map[&k2];
     let dr = r2 - r1;
     let dc = c2 - c1;
     let rows = if dr >= 0 {
@@ -85,17 +91,14 @@ fn get_paths(pad: &[&[u8; 3]], k1: u8, k2: u8) -> Vec<Vec<u8>> {
     }
 }
 
-fn locate(b: u8, pad: &[&[u8; 3]]) -> [i8; 2] {
-    let [mut row, mut col] = [0; 2];
-    for (y, r) in pad.iter().enumerate() {
-        for (x, &v) in r.iter().enumerate() {
-            if v == b {
-                row = y as _;
-                col = x as _;
-            }
+fn build_map(pad: &[&[u8; 3]]) -> FxHashMap<u8, [i8; 2]> {
+    let mut map = FxHashMap::default();
+    for (y, line) in pad.iter().enumerate() {
+        for (x, &b) in line.iter().enumerate() {
+            map.insert(b, [y as _, x as _]);
         }
     }
-    [row, col]
+    map
 }
 
 #[cfg(test)]
