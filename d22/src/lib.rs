@@ -26,7 +26,7 @@ fn process(mut num: i64) -> (i64, FxHashMap<Vec<i64>, i64>) {
         while seq.len() > 4 {
             seq.pop_front();
         }
-        if seq.len() == 4 {
+        if seq.len() == 4 && digit > 0 {
             curr.entry(Vec::from(seq.clone())).or_insert(digit);
         }
     }
