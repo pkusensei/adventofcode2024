@@ -20,3 +20,6 @@
 
 ### 1218
 - Again, DSU is useful. 
+
+### 1223
+- Bron-Kerbosch algorithm. Fancy. 
